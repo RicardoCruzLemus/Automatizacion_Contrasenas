@@ -54,6 +54,19 @@
             background-image: radial-gradient(circle at top right, #1e293b, var(--bg-color));
         }
 
+        .sidebar-logo {
+            max-width: 150px;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-theme .sidebar-logo {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
         /* Sidebar */
         .sidebar {
             width: 280px;
@@ -285,7 +298,7 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="brand" style="justify-content: center; width: 100%; margin-bottom: 10px;">
-                <img src="{{ url_for('static', filename='logo80.png') }}" alt="Canella 80 Años" style="max-width: 150px; height: auto;">
+                <img src="{{ url_for('static', filename='logo80.png') }}" alt="Canella 80 Años" class="sidebar-logo">
             </div>
             <button class="toggle-btn" id="sidebar-toggle" title="Ocultar/Mostrar Menú">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
