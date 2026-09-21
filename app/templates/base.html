@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CANELLA AUTOMATIZACION DE CONTRASEÑAS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: rgba(255, 255, 255, 0.95);
+            --surface-border: rgba(0, 0, 0, 0.08);
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --title-color: #0f172a;
+            --input-bg: #ffffff;
+        }
+
+        body.dark-theme {
+            --bg-color: #0f172a;
+            --surface-color: rgba(30, 41, 59, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --title-color: #f8fafc;
+            --input-bg: rgba(0,0,0,0.2);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(2, 132, 199, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.05), transparent 25%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body.dark-theme {
+            background-image: radial-gradient(circle at top right, #1e293b, var(--bg-color));
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--surface-color);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--surface-border);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .sidebar.collapsed .brand-text,
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+        
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            padding: 0 0.5rem;
+        }
+        
+        .sidebar.collapsed .sidebar-header {
+            justify-content: center;
+        }
+
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        .sidebar.collapsed .brand {
+            display: none; /* Oculta todo el título cuando está colapsado */
+        }
+
+        .nav-item {
+            padding: 1rem;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 3rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .title-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .title-area h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--title-color);
+            letter-spacing: -0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .title-area p {
+            color: var(--primary);
+            margin: 0.25rem 0 0 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* UI Elements */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.02);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .table-container {
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--surface-border);
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 1rem;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        td {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover td {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--input-bg);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            border-radius: 8px;
+            font-family: inherit;
+            margin-bottom: 1rem;
+            box-sizing: border-box;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+        .flash {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        .flash.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        .flash.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand" style="justify-content: center; width: 100%; margin-bottom: 10px;">
+                <img src="{{ url_for('static', filename='logo80.png') }}" alt="Canella 80 Años" style="max-width: 150px; height: auto;">
+            </div>
+            <button class="toggle-btn" id="sidebar-toggle" title="Ocultar/Mostrar Menú">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+        
+        <a href="{{ url_for('panel_bp.dashboard') }}" class="nav-item {% if request.endpoint == 'panel_bp.dashboard' and not request.args.get('status') %}active{% endif %}" title="Dashboard General">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 20px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            <span class="nav-text">Dashboard General</span>
+        </a>
+        
+        <div style="margin: 1rem 0 0.5rem 1rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;" class="nav-text">TRÁMITES</div>
+
+        <a href="{{ url_for('panel_bp.dashboard', status='Aceptada') }}" class="nav-item {% if request.args.get('status') == 'Aceptada' %}active{% endif %}" title="Aceptadas">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span class="nav-text">Aceptadas</span>
+        </a>
+
+        <a href="{{ url_for('panel_bp.dashboard', status='Parcial') }}" class="nav-item {% if request.args.get('status') == 'Parcial' %}active{% endif %}" title="Parciales">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 20px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span class="nav-text">Parciales</span>
+        </a>
+
+        <a href="{{ url_for('panel_bp.dashboard', status='Rechazada') }}" class="nav-item {% if request.args.get('status') == 'Rechazada' %}active{% endif %}" title="Rechazadas">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 20px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span class="nav-text">Rechazadas</span>
+        </a>
+
+        <div style="margin: 1rem 0 0.5rem 1rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;" class="nav-text">CONFIGURACIÓN</div>
+        <a href="{{ url_for('panel_bp.autorizadores') }}" class="nav-item {% if request.endpoint == 'panel_bp.autorizadores' %}active{% endif %}" title="Autorizadores">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 20px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span class="nav-text">Autorizadores</span>
+        </a>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="title-area">
+                <div style="border-left: 2px solid rgba(0,0,0,0.08); padding-left: 1.5rem; margin-left: 1rem;">
+                    <h1>Automatización de Contraseñas</h1>
+                    <p>DEPARTAMENTO DE CONTABILIDAD - {% block subtitle %}Panel{% endblock %}</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="toggle-btn" id="theme-toggle" title="Cambiar Tema (Claro/Oscuro)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <img src="https://ui-avatars.com/api/?name=Admin&background=3b82f6&color=fff&rounded=true" alt="User" width="45" style="border-radius: 50%;">
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+        <footer style="margin-top: auto; padding-top: 3rem; text-align: center; border-top: 1px solid var(--surface-border); color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
+            <div>Módulo de Automatización de Contraseñas - Contabilidad Canella</div>
+            <div>Desarrollado por Informática Canella - 2026 &copy;</div>
+        </footer>
+    </main>
+
+    <script>
+        // Cargar tema guardado antes de que renderice la pagina
+        const savedTheme = localStorage.getItem('stod_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+
+        const sidebar = document.querySelector('.sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+
+        // Cargar estado de la barra lateral (colapsada/extendida)
+        const savedSidebar = localStorage.getItem('stod_sidebar');
+        if (savedSidebar === 'collapsed') {
+            sidebar.classList.add('collapsed');
+        }
+        
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('stod_sidebar', isCollapsed ? 'collapsed' : 'expanded');
+        });
+
+        // Logica para cambiar entre modo claro y oscuro
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            localStorage.setItem('stod_theme', isDark ? 'dark' : 'light');
+        });
+    </script>
+</body>
+</html>

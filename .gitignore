@@ -1,0 +1,11 @@
+# Archivos sensibles - NUNCA subir al repositorio
+.env
+.token_cache.json
+__pycache__/
+*.pyc
+*.pyo
+storage/
+logs/
+*.log
+.venv/
+app.db

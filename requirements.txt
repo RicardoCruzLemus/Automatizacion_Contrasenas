@@ -1,0 +1,10 @@
+Flask==3.0.3
+requests==2.31.0
+easyocr==1.7.1       # OCR preferido por el usuario
+# pytesseract==0.3.10 # Deshabilitado en favor de easyocr
+pdf2image==1.17.0 # Para convertir PDFs a imágenes para OCR
+Pillow               # Procesamiento de imágenes para OCR
+msal>=1.28           # Microsoft Authentication Library (Graph API / Azure AD)
+python-dotenv>=1.0   # Carga de variables de entorno desde .env
+Flask-SQLAlchemy==3.1.1 # Base de datos SQLite
+pytz==2026.3.post1 # Zonas horarias

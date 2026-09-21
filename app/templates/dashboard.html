@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard STOD{% endblock %}
+{% block subtitle %}Estado de Correos Entrantes{% endblock %}
+
+{% block extra_css %}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: var(--surface-color);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--surface-border);
+    padding: 1.5rem;
+    border-radius: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card h3 {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .value {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    color: var(--text-main);
+}
+
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-aceptada {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.status-parcial {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+.status-rechazada {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Aceptadas (OC + Factura)</h3>
+        <div class="value" style="color: var(--success);">{{ total_aceptadas }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Parciales (Falta doc)</h3>
+        <div class="value" style="color: var(--warning);">{{ total_parciales }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Rechazadas (Error)</h3>
+        <div class="value" style="color: var(--danger);">{{ total_rechazadas }}</div>
+    </div>
+</div>
+
+<div class="table-container">
+    <h2>Registro Histórico de Correos</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha y Hora</th>
+                <th>Remitente</th>
+                <th>Asunto</th>
+                <th>Proveedor / NIT</th>
+                <th>Estado</th>
+                <th>Detalles Faltantes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ log.sender }}</td>
+                <td>{{ log.subject }}</td>
+                <td>
+                    {% if log.extracted_empresa and log.extracted_empresa != 'EMPRESA_DESCONOCIDA' %}
+                        {{ log.extracted_empresa }} <br>
+                        <small style="color: var(--text-muted);">{{ log.extracted_nit }}</small>
+                    {% else %}
+                        <span style="color: var(--text-muted);">No extraído</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="status-badge status-{{ log.status|lower }}">{{ log.status }}</span>
+                </td>
+                <td style="color: var(--warning);">
+                    {{ log.missing_docs or '-' }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted);">No hay correos registrados en la base de datos todavía.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
