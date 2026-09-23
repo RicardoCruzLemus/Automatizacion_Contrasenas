@@ -23,6 +23,12 @@ class Config:
     SERVER_IP = os.environ.get('SERVER_IP', '')
     SERVER_USERNAME = os.environ.get('SERVER_USERNAME', '')
     SERVER_PASSWORD = os.environ.get('SERVER_PASSWORD', '')
+
+    # Credenciales Base de Datos STOD (SQL Server)
+    STOD_DB_SERVER = os.environ.get('STOD_DB_SERVER', '')
+    STOD_DB_NAME = os.environ.get('STOD_DB_NAME', 'STOD_SAPBONE')
+    STOD_DB_USER = os.environ.get('STOD_DB_USER', '')
+    STOD_DB_PASSWORD = os.environ.get('STOD_DB_PASSWORD', '')
     
 class DevelopmentConfig(Config):
     DEBUG = True

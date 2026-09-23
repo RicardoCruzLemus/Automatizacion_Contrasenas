@@ -59,13 +59,25 @@ def extract_metadata_from_documents(pdf_paths: list) -> dict:
         "OrdenCompra": "OC_DESCONOCIDA",
         "CodigoProveedor": "CODIGO_DESCONOCIDO",
         "FacturaReferencia": "FACTURA_DESCONOCIDA",
-        "FacturaTotal": "TOTAL_DESCONOCIDO"
+        "FacturaTotal": "TOTAL_DESCONOCIDO",
+        "CondicionesPago": None
     }
     
     texto_total = ""
+    file_mapping = {}
+    
     for pdf_path in pdf_paths:
         log.info(f"Aplicando OCR a: {os.path.basename(pdf_path)}")
-        texto_total += _extract_text_from_pdf(pdf_path) + "\n"
+        texto_pdf = _extract_text_from_pdf(pdf_path)
+        texto_total += texto_pdf + "\n"
+        
+        # Identificación rápida para renombrar
+        texto_limpio = " ".join(texto_pdf.split())
+        if re.search(r'Orden de compra n[uú]mero', texto_limpio, re.IGNORECASE):
+            file_mapping[pdf_path] = "OC_TYPE"
+        elif re.search(r'DOCUMENTO TRIBUTARIO|Factura No\.|Serie', texto_limpio, re.IGNORECASE):
+            file_mapping[pdf_path] = "FAC_TYPE"
+
         
     # Limpiamos un poco el texto para facilitar regex
     texto_total_limpio = " ".join(texto_total.split())
@@ -135,5 +147,20 @@ def extract_metadata_from_documents(pdf_paths: list) -> dict:
     if match_total:
         metadata["FacturaTotal"] = match_total.group(1)
 
+    # 8. Condiciones de Pago (Ej: 15 días)
+    match_condiciones = re.search(r'Condiciones de Pago\s*[:]*\s*(\d+)\s*d[ií]as', texto_total_limpio, re.IGNORECASE)
+    if match_condiciones:
+        metadata["CondicionesPago"] = match_condiciones.group(1)
+
     log.info(f"Metadata extraída: {metadata}")
+    
+    # Asignar nombres finales según la metadata extraída
+    final_mapping = {}
+    for path, doc_type in file_mapping.items():
+        if doc_type == "OC_TYPE" and metadata.get("OrdenCompra") != "OC_DESCONOCIDA":
+            final_mapping[path] = f"OC-{metadata['OrdenCompra']}.pdf"
+        elif doc_type == "FAC_TYPE" and metadata.get("FacturaReferencia") != "FACTURA_DESCONOCIDA":
+            final_mapping[path] = f"FAC-{metadata['FacturaReferencia']}.pdf"
+            
+    metadata["file_mapping"] = final_mapping
     return metadata

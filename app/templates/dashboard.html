@@ -62,6 +62,115 @@
     background: rgba(239, 68, 68, 0.2);
     color: var(--danger);
 }
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal-content {
+    background: var(--surface-color);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--surface-border);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: color 0.2s;
+}
+.close-btn:hover {
+    color: var(--danger);
+}
+.file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--surface-border);
+}
+.file-item:last-child {
+    border-bottom: none;
+}
+.file-link {
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+.file-link:hover {
+    text-decoration: underline;
+}
+.eye-btn {
+    background: rgba(2, 132, 199, 0.1);
+    color: var(--primary);
+    border: none;
+    padding: 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+.eye-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+.print-btn {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border: none;
+    padding: 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+.print-btn:hover {
+    background: var(--success);
+    color: white;
+}
 {% endblock %}
 
 {% block content %}
@@ -81,7 +190,13 @@
 </div>
 
 <div class="table-container">
-    <h2>Registro Histórico de Correos</h2>
+    <h2>
+        {% if current_filter %}
+            Correos Filtrados: <span style="color: var(--primary);">{{ current_filter }}s</span>
+        {% else %}
+            Registro Histórico General (Todos los correos)
+        {% endif %}
+    </h2>
     <table>
         <thead>
             <tr>
@@ -90,7 +205,8 @@
                 <th>Asunto</th>
                 <th>Proveedor / NIT</th>
                 <th>Estado</th>
-                <th>Detalles Faltantes</th>
+                <th>Ubicación</th>
+                <th style="text-align: center;">Docs</th>
             </tr>
         </thead>
         <tbody>
@@ -110,8 +226,31 @@
                 <td>
                     <span class="status-badge status-{{ log.status|lower }}">{{ log.status }}</span>
                 </td>
-                <td style="color: var(--warning);">
-                    {{ log.missing_docs or '-' }}
+                <td style="color: var(--text-muted); font-size: 0.75rem; max-width: 250px; word-wrap: break-word;">
+                    {% if log.status == 'Rechazada' %}
+                        <strong style="color: var(--danger);">Motivo:</strong> {{ log.missing_docs or 'Desconocido' }}
+                    {% else %}
+                        {% if log.status == 'Parcial' and log.missing_docs %}
+                            <strong style="color: var(--warning);">Nota:</strong> {{ log.missing_docs }}<br>
+                        {% endif %}
+                        {% if log.file_path %}
+                            {{ log.file_path }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endif %}
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                    {% if log.file_path and log.status != 'Rechazada' %}
+                        <button class="eye-btn" onclick="verArchivos({{ log.id }})" title="Ver Documentos Individuales">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                        <a href="/api/imprimir_docs/{{ log.id }}" target="_blank" class="print-btn" title="Imprimir Todos (Sin Comprobante)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        </a>
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
             </tr>
             {% else %}
@@ -122,4 +261,71 @@
         </tbody>
     </table>
 </div>
+
+<!-- Modal para ver archivos -->
+<div class="modal-overlay" id="filesModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Archivos Guardados</h3>
+            <button class="close-btn" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div id="modalLoading" style="display: none; text-align: center; color: var(--text-muted); padding: 1rem;">
+            Cargando documentos...
+        </div>
+        <div id="modalError" style="display: none; color: var(--danger); padding: 1rem; text-align: center;"></div>
+        <ul class="file-list" id="modalFileList"></ul>
+    </div>
+</div>
+
+<script>
+    function verArchivos(logId) {
+        document.getElementById('filesModal').classList.add('active');
+        document.getElementById('modalLoading').style.display = 'block';
+        document.getElementById('modalFileList').innerHTML = '';
+        document.getElementById('modalError').style.display = 'none';
+
+        fetch(`/api/archivos/${logId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modalLoading').style.display = 'none';
+                if (data.exito) {
+                    const ul = document.getElementById('modalFileList');
+                    if (data.archivos.length === 0) {
+                        ul.innerHTML = '<li style="text-align:center; color:var(--text-muted); padding:1rem;">La carpeta está vacía.</li>';
+                    } else {
+                        data.archivos.forEach(file => {
+                            const li = document.createElement('li');
+                            li.className = 'file-item';
+                            li.innerHTML = `
+                                <a href="/api/descargar/${logId}/${encodeURIComponent(file)}" target="_blank" class="file-link">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    ${file}
+                                </a>
+                            `;
+                            ul.appendChild(li);
+                        });
+                    }
+                } else {
+                    document.getElementById('modalError').style.display = 'block';
+                    document.getElementById('modalError').innerText = data.error || 'Ocurrió un error al cargar los archivos.';
+                }
+            })
+            .catch(error => {
+                document.getElementById('modalLoading').style.display = 'none';
+                document.getElementById('modalError').style.display = 'block';
+                document.getElementById('modalError').innerText = 'Error de conexión con el servidor.';
+            });
+    }
+
+    function cerrarModal() {
+        document.getElementById('filesModal').classList.remove('active');
+    }
+
+    // Cerrar el modal al hacer clic afuera
+    document.getElementById('filesModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModal();
+        }
+    });
+</script>
 {% endblock %}

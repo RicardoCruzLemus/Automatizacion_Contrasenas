@@ -31,6 +31,7 @@ class EmailLog(db.Model):
     missing_docs = db.Column(db.String(255), nullable=True) # Detalles de lo que falta
     extracted_empresa = db.Column(db.String(150), nullable=True)
     extracted_nit = db.Column(db.String(50), nullable=True)
+    file_path = db.Column(db.String(500), nullable=True) # Ruta de almacenamiento final
     created_at = db.Column(db.DateTime, default=get_guatemala_time)
     
     def __repr__(self):

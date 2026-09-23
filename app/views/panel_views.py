@@ -1,4 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, send_file
+import os
+import tempfile
+from PyPDF2 import PdfMerger
 from app.models import db, AuthorizerMap, EmailLog
 
 panel_bp = Blueprint('panel_bp', __name__)
@@ -96,3 +99,54 @@ def autorizadores():
         mapeos_agrupados[m.autorizador_stod].append(m)
         
     return render_template('autorizadores.html', mapeos_agrupados=mapeos_agrupados)
+
+@panel_bp.route('/api/archivos/<int:log_id>')
+def get_archivos(log_id):
+    log_entry = EmailLog.query.get_or_404(log_id)
+    if not log_entry.file_path or not os.path.exists(log_entry.file_path):
+        return jsonify({"exito": False, "error": "La ruta no existe o no se ha definido."})
+        
+    try:
+        archivos = [f for f in os.listdir(log_entry.file_path) if os.path.isfile(os.path.join(log_entry.file_path, f))]
+        return jsonify({"exito": True, "archivos": archivos})
+    except Exception as e:
+        return jsonify({"exito": False, "error": str(e)})
+
+@panel_bp.route('/api/descargar/<int:log_id>/<path:filename>')
+def descargar_archivo(log_id, filename):
+    log_entry = EmailLog.query.get_or_404(log_id)
+    if not log_entry.file_path or not os.path.exists(log_entry.file_path):
+        return "Ruta no encontrada", 404
+        
+    return send_from_directory(log_entry.file_path, filename)
+
+@panel_bp.route('/api/imprimir_docs/<int:log_id>')
+def imprimir_docs(log_id):
+    log_entry = EmailLog.query.get_or_404(log_id)
+    if not log_entry.file_path or not os.path.exists(log_entry.file_path):
+        return "Ruta no encontrada", 404
+        
+    try:
+        merger = PdfMerger()
+        archivos = [f for f in os.listdir(log_entry.file_path) if os.path.isfile(os.path.join(log_entry.file_path, f))]
+        
+        # Filtramos para no incluir el Comprobante_STOD
+        archivos_imprimir = [f for f in archivos if "Comprobante_STOD" not in f and f.lower().endswith('.pdf')]
+        
+        if not archivos_imprimir:
+            return "No hay documentos PDF válidos para imprimir en esta carpeta.", 404
+            
+        for pdf in archivos_imprimir:
+            merger.append(os.path.join(log_entry.file_path, pdf))
+            
+        temp_dir = os.path.join(tempfile.gettempdir(), 'stod_imprimir')
+        os.makedirs(temp_dir, exist_ok=True)
+        salida = os.path.join(temp_dir, f'Impresion_STOD_{log_id}.pdf')
+        
+        merger.write(salida)
+        merger.close()
+        
+        return send_file(salida, mimetype='application/pdf', as_attachment=False)
+    except Exception as e:
+        return f"Error al generar documento de impresion: {str(e)}", 500
+
