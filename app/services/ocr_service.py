@@ -138,12 +138,23 @@ def extract_metadata_from_documents(pdf_paths: list) -> dict:
             metadata["Autorizador"] = match_aut.group(1).strip(' -').replace('/', '_')
 
     # 6. Referencia de Factura (Ej: 2363378614)
-    match_factura = re.search(r'No\.\s*[:]*\s*([0-9]{5,20})', texto_total_limpio, re.IGNORECASE)
+    # Cubrimos múltiples variantes: "No.", "Factura Electrónica", "Factura No.", "Factura #", "Nº", "Número:"
+    match_factura = re.search(r'(?:No\.|Factura Electr[oó]nica|Factura\s+No\.?|N[uú]mero\s+de\s+Factura|Factura\s*#|N[oº]\.?|N[uú]mero:?)[\s:]*([0-9]{5,20})', texto_total_limpio, re.IGNORECASE)
+    if not match_factura:
+        # Fallback exclusivo para FEL Guatemala: 10 dígitos aislados (ej. 2455915896).
+        # Es muy seguro porque los NITs son más cortos (ej. 9 dígitos), teléfonos son de 8, y las OC de Canella son de 8.
+        match_factura = re.search(r'\b([0-9]{10})\b', texto_total_limpio)
+        
     if match_factura:
         metadata["FacturaReferencia"] = match_factura.group(1)
 
     # 7. Total de Factura (Ej: Q 1,000.00)
-    match_total = re.search(r'TOTAL(?: EN LETRAS)?[\s:]*(?:Q\s*)?([0-9,]+\.[0-9]{2})', texto_total_limpio, re.IGNORECASE)
+    # Se usa \bTOTAL\b para evitar que coincida con "SUBTOTAL"
+    match_total = re.search(r'\bTOTAL\b(?: EN LETRAS)?[\s:]*(?:Q\.?|GTQ|Q)?\s*([0-9,]+\.[0-9]{2})', texto_total_limpio, re.IGNORECASE)
+    if not match_total:
+        # Fallback por si acaso:
+        match_total = re.search(r'TOTAL[\s:]*(?:Q\s*)?([0-9,]+\.[0-9]{2})', texto_total_limpio, re.IGNORECASE)
+        
     if match_total:
         metadata["FacturaTotal"] = match_total.group(1)
 

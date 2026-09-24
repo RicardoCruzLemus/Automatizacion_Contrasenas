@@ -55,5 +55,41 @@ def generar_comprobante_pdf(ruta_destino, datos):
     draw_row("Forma de pago", datos.get("forma_pago", ""))
     draw_row("Moneda", datos.get("moneda", ""))
     
+    # -----------------------------------------------------
+    # SECCIÓN: Listado de Facturas
+    # -----------------------------------------------------
+    pdf.ln(10)
+    
+    # Título con fondo celeste
+    pdf.set_fill_color(83, 192, 222) # Un color celeste parecido a Bootstrap Info
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(50, 8, "Listado de Facturas", border=0, ln=1, align='C', fill=True)
+    
+    pdf.set_text_color(0, 0, 0) # Volver a negro
+    pdf.ln(3)
+    
+    # Cabeceras de tabla
+    pdf.set_font("Arial", 'B', 9)
+    # Dimensiones: Referencia (60), Total (60), Orden_De_Compra (70)
+    pdf.cell(60, 8, "Referencia", border='B', align='C')
+    pdf.cell(60, 8, "Total", border='B', align='C')
+    pdf.cell(70, 8, "Orden_De_Compra", border='B', align='C', ln=1)
+    
+    # Fila de datos
+    pdf.set_font("Arial", '', 9)
+    ref = str(datos.get("factura_referencia", ""))
+    tot = str(datos.get("factura_total", ""))
+    oc = str(datos.get("orden_compra", ""))
+    
+    pdf.cell(60, 10, ref, border='B', align='C')
+    pdf.cell(60, 10, tot, border='B', align='C')
+    pdf.cell(70, 10, oc, border='B', align='C', ln=1)
+    
+    # Footer de totales
+    pdf.set_font("Arial", 'B', 9)
+    pdf.cell(60, 8, "Totales:", border=0, align='R')
+    pdf.cell(60, 8, f"Q{tot}", border=0, align='C', ln=1)
+    
     pdf.output(ruta_destino)
     return ruta_destino
